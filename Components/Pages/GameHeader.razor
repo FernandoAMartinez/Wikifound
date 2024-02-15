@@ -1,0 +1,52 @@
+@page "/header"
+@rendermode InteractiveServer
+
+<div style="background-color: #01110A; width:100vw; padding: 1rem; color:white;">
+    <input type="text" placeholder="busqueda 1" @bind="firstSearch">
+    <input type="text" placeholder="busqueda 2" @bind="lastSearch">
+
+    <button @onclick="SearchWikipediaUrl" type="button" class="search-button">Buscar</button>
+
+    @if (!string.IsNullOrWhiteSpace(firstWikipediaUrl))
+    {
+        <p>@firstWikipediaUrl</p>
+    }
+</div>
+
+@code
+{
+    const string BASE_URL = "https://es.wikipedia.org/wiki/";
+    private List<PageBreadcrumb> breadcrumbs = new();
+    
+    [Parameter]Francia
+    
+    [Parameter]
+    private string lastSearch = string.Empty;
+    private string firstWikipediaUrl = string.Empty;
+    private string lastWikipediaUrl = string.Empty;
+    private void SearchWikipediaUrl(MouseEventArgs e)
+    {
+
+        firstWikipediaUrl = BuildWikipediaUrl(firstSearch);
+        lastWikipediaUrl = BuildWikipediaUrl(lastSearch);
+        Console.WriteLine(firstWikipediaUrl);
+        Console.WriteLine(lastWikipediaUrl);
+
+        StateHasChanged();
+    }
+
+    protected override Task OnInitializedAsync()
+    {
+        return base.OnInitializedAsync();
+    }
+
+    private string BuildWikipediaUrl(string word)
+    {
+        var underscoredWord = word.Replace(" ", "_");
+
+        var searchUrl = string.Concat(BASE_URL, underscoredWord);
+
+        return searchUrl;
+    }
+
+}
