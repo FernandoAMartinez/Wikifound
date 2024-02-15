@@ -2,9 +2,8 @@
 @inject NavigationManager navigation
 @rendermode InteractiveServer
 
-<div
-    style="height:100vh; width: 100vw; display:flex; align-items:center; justify-content: center; background-color:#093623">
-    <div class="box-shadow-container" style="background-color: #6A9088 ; padding: 3rem; border-radius: 10px;">
+<div class="home-box-container">
+    <div class="form-box box-shadow">
         <div class="form-group">
             <input id="textbox1" placeholder="Busqueda 1" class="form-control mb-3" @bind="@firstSearch" />
         </div>
@@ -30,6 +29,9 @@
     private string firstWikipediaUrl = string.Empty;
     private string lastWikipediaUrl = string.Empty;
 
+    private string BuildQueryStringParameter() =>
+        $"firstSearch={firstSearch.Replace(" ", "_")}&lastSearch={lastSearch.Replace(" ", "_")}";
+    
     private void SearchWikipediaUrl(MouseEventArgs e)
     {
         if (!string.IsNullOrEmpty(firstSearch) &&
@@ -42,13 +44,15 @@
                 {
                     Url = firstWikipediaUrl,
                     Page = firstSearch,
-                    Active = "active"
+                    Active = true
                 });
         }
 
         StateHasChanged();
 
-        navigation.NavigateTo("/play");
+        var queryParameters = BuildQueryStringParameter();
+
+        navigation.NavigateTo($"/play?{queryParameters}");
     }
 
     private string BuildWikipediaUrl(string word)

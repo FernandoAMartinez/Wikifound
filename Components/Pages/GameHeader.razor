@@ -18,9 +18,12 @@
     const string BASE_URL = "https://es.wikipedia.org/wiki/";
     private List<PageBreadcrumb> breadcrumbs = new();
     
-    [Parameter]Francia
+    [Parameter]
+    public string FirstSearch {get;set;}
     
     [Parameter]
+    public string LastSearch {get;set;}
+    private string firstSearch = string.Empty;
     private string lastSearch = string.Empty;
     private string firstWikipediaUrl = string.Empty;
     private string lastWikipediaUrl = string.Empty;

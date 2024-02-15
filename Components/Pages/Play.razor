@@ -4,7 +4,6 @@
 
 <PageTitle>Wikifound</PageTitle>
 
-
 <div class="container-fluid">
     <div class="row relative">
         <div class="navbar bg-dark">
@@ -23,7 +22,7 @@
 
             <div class="col-3">
                 <div class="form-group">
-                    <button @onclick="SearchWikipediaUrl" class="btn btn-block btn-primary"
+                    <button @onclick="SearchUrlOnClick" class="btn btn-block btn-primary"
                         disabled="@(!FieldCheck)">Buscar</button>
                 </div>
             </div>
@@ -33,16 +32,15 @@
                 <span class="badge rounded-pill">@currentCount</span>
             </div>
             <div class="col-12">
-                <NavgationBreadcrum VisitedPages="breadcrumbs"/>
+                <NavgationBreadcrum VisitedPages="breadcrumbs" />
             </div>
         </div>
 
         <div class="col-12">
             <div class="embed-responsive">
 
-                <iframe class="embed-responsive embed-responsive-16by9" @onload="IframOnLoad"
-                    id="wikipedia_iframe" @ref="iframeRef" width="1600" height="900"
-                    allowfullscreen src="@wikipediaUrl" />
+                <iframe class="embed-responsive embed-responsive-16by9" @onload="IframOnLoad" id="wikipedia_iframe"
+                    @ref="iframeRef" width="1600" height="900" allowfullscreen src="@wikipediaUrl" />
             </div>
 
         </div>
@@ -56,12 +54,31 @@
 {
     const string BASE_URL = "https://es.wikipedia.org/wiki/";
     private List<PageBreadcrumb> breadcrumbs = new();
+
+    [SupplyParameterFromQuery(Name = "firstSearch")]
+    public string FirstSearch { get; set; }
+    [SupplyParameterFromQuery(Name = "lastSearch")]
+    public string LastSearch { get; set; }
     string firstSearch = string.Empty;
     string lastSearch = string.Empty;
     private string wikipediaUrl = string.Empty;
-    private bool FieldCheck => !string.IsNullOrWhiteSpace(firstSearch) && !string.IsNullOrWhiteSpace(lastSearch);
+    private bool FieldCheck => !string.IsNullOrWhiteSpace(FirstSearch) && !string.IsNullOrWhiteSpace(LastSearch);
     private int currentCount = 0;
     private ElementReference iframeRef;
+
+    public override async Task SetParametersAsync(ParameterView parameters)
+    {
+        if (parameters.TryGetValue<string>(nameof(FirstSearch), out firstSearch) &&
+        parameters.TryGetValue<string>(nameof(LastSearch), out lastSearch))
+        {
+            firstSearch = firstSearch.Replace("_"," ");
+            lastSearch = lastSearch.Replace("_", " ");
+
+            SearchWikipediaUrl();
+        }
+
+        await base.SetParametersAsync(parameters);
+    }
     private async Task GetCurrentIframeUrl()
     {
         if (iframeRef.Id != null)
@@ -70,15 +87,15 @@
             var currentUrl = await iframe.InvokeAsync<string>("getAttribute", "src");
 
             wikipediaUrl = currentUrl;
-            
-            if(breadcrumbs.Count > 0)
-                breadcrumbs.Last().Active = "";
+
+            if (breadcrumbs.Count > 0)
+                breadcrumbs.Last().Active = false;
 
             breadcrumbs.Add(new PageBreadcrumb()
                 {
                     Url = wikipediaUrl,
-                    Page = firstSearch,
-                    Active = "active"
+                    Page = FirstSearch,
+                    Active = true
                 });
 
             Console.WriteLine($"URL actual del iframe: {currentUrl}");
@@ -93,7 +110,10 @@
 
         return searchUrl;
     }
-    private void SearchWikipediaUrl(MouseEventArgs e)
+    private void SearchUrlOnClick(MouseEventArgs e) =>
+        SearchWikipediaUrl();
+
+    private void SearchWikipediaUrl()
     {
         if (!string.IsNullOrEmpty(firstSearch) &&
         !string.IsNullOrEmpty(lastSearch))
@@ -101,13 +121,12 @@
             wikipediaUrl = BuildWikipediaUrl(firstSearch);
             Console.WriteLine(wikipediaUrl);
             Console.WriteLine(BuildWikipediaUrl(lastSearch));
-            Console.WriteLine(e.Buttons);
 
             breadcrumbs.Add(new PageBreadcrumb()
                 {
                     Url = wikipediaUrl,
-                    Page = firstSearch,
-                    Active = "active"
+                    Page = FirstSearch,
+                    Active = true
                 });
         }
 
@@ -116,11 +135,11 @@
 
     private async Task IframOnLoad(ProgressEventArgs e)
     {
-        if(string.IsNullOrWhiteSpace(wikipediaUrl))
+        if (string.IsNullOrWhiteSpace(wikipediaUrl))
             return;
-            
+
         currentCount++;
-        Console.WriteLine($"Loaded [{currentCount}]: {firstSearch} => {wikipediaUrl}");
+        Console.WriteLine($"Loaded [{currentCount}]: {FirstSearch} => {wikipediaUrl}");
         await GetCurrentIframeUrl();
     }
 
